@@ -1,0 +1,40 @@
+# The remote config names a host you control and points at a private key.
+remote/zrw-remote.conf
+remote/results/
+# Runtime state of local jobs.
+jobs/
+
+# Local version snapshots from development -- git history is the real
+# record once this is a git repo; these are just local working copies.
+backups/
+
+# Early prototype history (old zips, the original v2 script, ad-hoc notes).
+# Real project history, kept out of the public repo on purpose to keep it
+# focused on the current, maintained worker.
+legacy/
+
+# Formal documents: keep the signed PDF + its checksum tracked, but not the
+# editable source formats -- they're working files, not the published artifact.
+document/*.docx
+document/*.htm
+
+# Raw, unedited evidence from real runs against the reference server: real
+# media filenames from the actual library end up in this output (rsync
+# progress lines, directory listings, log excerpts), so none of it is
+# published. Only the curated write-up for each round (README.md) stays
+# public; the raw captures it references live here, locally, only.
+docs/testing/**/*.txt
+docs/testing/**/*.log
+docs/discovery/
+docs/ENVIRONMENT-DISCOVERY.txt
+
+# Same reasoning, and it mixes real raw output directly into its own prose
+# (not just in separate files), so the whole thing stays local.
+analisis-disco-usb-zfs/
+
+# OS / editor noise, just in case.
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~

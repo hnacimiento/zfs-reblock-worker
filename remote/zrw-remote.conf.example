@@ -1,0 +1,95 @@
+# -----------------------------------------------------------------------------
+# ZFS Reblock Worker - remote test configuration
+#
+# Copy this file to  zrw-remote.conf  and fill it in. That file is ignored by
+# git on purpose: it names a host you control.
+#
+#     cp remote/zrw-remote.conf.example remote/zrw-remote.conf
+#     chmod 600 remote/zrw-remote.conf
+#
+# No password ever goes in here. Authentication is by SSH key only.
+#
+# --- running this from Windows -----------------------------------------------
+# The runner needs ssh, rsync and bash, so run it from WSL, not from PowerShell:
+#
+#     wsl -d Ubuntu
+#     cd /mnt/c/Users/<you>/source/repos/zfs-reblock-worker
+#     bash remote/zrw-remote.sh discover
+#
+# Keep the private key inside the WSL home, NOT under /mnt/c. Files on /mnt/c
+# cannot hold 0600 permissions, and ssh refuses a key that is group/world
+# readable -- the run dies with "UNPROTECTED PRIVATE KEY FILE".
+#
+#     cp /mnt/c/Users/<you>/.ssh/id_ed25519 ~/.ssh/ && chmod 600 ~/.ssh/id_ed25519
+# -----------------------------------------------------------------------------
+
+# --- connection --------------------------------------------------------------
+ZRW_HOST=""                  # e.g. 192.168.1.50  or  truenas.lan
+ZRW_USER="root"              # the worker needs UID 0 on the remote host
+ZRW_PORT="22"
+ZRW_SSH_KEY="~/.ssh/id_ed25519"   # private key path, inside the WSL home
+
+# Which ssh/scp to call. Leave as "ssh"/"scp" on Linux and WSL.
+#
+# On Git Bash the MSYS ssh applies POSIX permission rules to a key stored on an
+# NTFS drive, where those bits are meaningless, and refuses it. Windows' own
+# OpenSSH reads the NTFS ACL instead and accepts the same key, so pointing at it
+# makes the runner usable from Git Bash without moving the key anywhere:
+#
+#     ZRW_SSH_BIN="/c/Windows/System32/OpenSSH/ssh.exe"
+#     ZRW_SCP_BIN="/c/Windows/System32/OpenSSH/scp.exe"
+ZRW_SSH_BIN="ssh"
+ZRW_SCP_BIN="scp"
+
+# Extra ssh options if you need them (jump host, known_hosts file, ...).
+# Leave empty unless you know you need it.
+ZRW_SSH_OPTS=""
+
+# --- what to test ------------------------------------------------------------
+# Directory on the NAS to rehearse against. Read-only in every default mode.
+ZRW_TARGET="/mnt/toolbox/media"
+
+# Where to stage the worker on the remote host. Must be writable and persistent
+# (NOT /tmp: the job state must survive a reboot if you ever run for real).
+ZRW_REMOTE_DIR="/mnt/toolbox/zrw"
+
+# --- worker parameters used during the rehearsal -----------------------------
+ZRW_THRESHOLD="2G"           # candidate size floor
+ZRW_RECORDSIZE="1M"          # expected dataset recordsize (never modified)
+ZRW_BWLIMIT="35M"
+ZRW_INTEGRITY="maximum"      # standard | strict | maximum
+
+# sha256 | b2 | md5. sha256 is the default and documents the contract. b2
+# (BLAKE2b) is cryptographic too and roughly 3x faster, which only matters if
+# the hash rather than the copy dominates the clock -- i.e. with a high bwlimit.
+ZRW_HASH="sha256"
+
+# Files in parallel. 1 is the default and the safe answer on spinning disks:
+# more workers means more concurrent seeks, not more throughput.
+ZRW_WORKERS="1"
+
+# Read N candidate files end to end to measure the pool's real read throughput.
+# This only reads; it never writes. 0 disables it.
+ZRW_DRY_SAMPLE="3"
+
+# Discovery round-trip. When "yes", the discovery run copies ONE existing file
+# with the worker's own rsync options INTO ITS OWN DIRECTORY, compares
+# ACL/xattr/timestamps, and deletes the copy. Same directory is deliberate: a
+# new file inherits its NFSv4 ACL from the parent, so copying anywhere else
+# would measure a different inheritance and give an answer that does not apply.
+# The source file is never modified. "no" keeps discovery strictly read-only.
+ZRW_PROBE_WRITE="no"
+
+# Where the worker keeps jobs/ on the NAS. flock, sync -f and the atomic rename
+# of the state all happen here, possibly on a different pool than the data.
+# Leave empty to skip those probes.
+ZRW_STATE_DIR=""
+
+# Only if you explicitly want the round-trip somewhere else. NOT equivalent:
+# the ACL result becomes merely indicative. Normally leave empty.
+ZRW_SCRATCH_DIR=""
+
+# --- safety ------------------------------------------------------------------
+# Master switch. While this is "no", the runner refuses every mode that could
+# modify a single byte on the NAS, no matter which flags are passed.
+ZRW_ALLOW_WRITE="no"

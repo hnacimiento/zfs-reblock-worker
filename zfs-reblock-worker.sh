@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# zfs-reblock-worker.sh - V4.1.0
+# zfs-reblock-worker.sh - V4.4.14
 #
 # Rewrites large files in place (same dataset) so their blocks adopt the
 # recordsize the dataset is already configured with. Built for TrueNAS SCALE.

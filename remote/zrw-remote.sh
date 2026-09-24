@@ -102,7 +102,7 @@ rsh() { "${SSH_BASE[@]}" "$DEST" "$@"; }
 # which the far end re-parses with its own shell (zsh on this project's
 # reference NAS, though the bug is not zsh-specific). Wrapping a value in
 # literal single quotes breaks the instant that value itself contains one --
-# and real media libraries are full of them ("Tom Clancy's ..."). `%q` produces
+# and real media libraries are full of them ("O'Brien's ..."). `%q` produces
 # a quoted form that survives the round trip; both bash and zsh understand it.
 rq() { local q; printf -v q '%q' "$1"; printf '%s' "$q"; }
 
